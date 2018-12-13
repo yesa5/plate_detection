@@ -6,8 +6,8 @@ import cv2
 import numpy as np
 import time
 
-def list(request):
-    return render(request, 'ml/main.html')
+def listt(request):
+    return render(request, 'ml/main.html')#, {'fname': name})
 
 def find(request):
 	
@@ -16,11 +16,12 @@ def find(request):
 	page = page[page.find('<div class="gallery__container">'):]
 	l = page.find('<a href="')
 	r = page[l:].find('">')
-	
+	name = link[link.find('show/') + 5:]
+	print(name)
 	try:
 	    h = httplib2.Http('.cache')
 	    response, content = h.request(page[l + 9 :l + r])
-	    out = open('img.jpg', 'wb')
+	    out = open('data/' + name + '.jpg', 'wb')
 	    out.write(content)
 	    out.close()
 	except:
@@ -28,10 +29,10 @@ def find(request):
 
 	index = 0
 	cnt = 0
-	plateCascade = cv2.CascadeClassifier('haarcascade_russian_plate_number.xml')
+	plateCascade = cv2.CascadeClassifier('data/haarcascade_russian_plate_number.xml')
 
 	try:
-	    frame = cv2.imread('img.jpg')
+	    frame = cv2.imread('data/' + name + '.jpg')
 	    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 	    plaques = plateCascade.detectMultiScale(gray, 1.3, 5)
 	    for i, (x, y, w, h) in enumerate(plaques):
@@ -41,11 +42,11 @@ def find(request):
 	        resized = cv2.resize(roi_color, dim, interpolation = cv2.INTER_AREA)
 	        w_resized=resized.shape[0]
 	        h_resized=resized.shape[1]
-	        cv2.imwrite(str(cnt) + '.jpg', resized)
+	        cv2.imwrite('data/' + name + '.jpg', resized)
 	        cnt += 1
 	        frame[100:100+w_resized,100:100+h_resized] = resized     
 	    cv2.destroyAllWindows()
 	except:
 		print('error')
 
-	return redirect('list')
+	return redirect('listt')#, 'data/' + name + '.jpg')
