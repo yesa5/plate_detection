@@ -5,6 +5,10 @@ import requests
 import cv2 
 import numpy as np
 import time
+from PIL import Image
+import pytesseract
+import argparse
+import os
 
 def listt(request):
     return render(request, 'ml/main.html')#, {'fname': name})
@@ -17,7 +21,6 @@ def find(request):
 	l = page.find('<a href="')
 	r = page[l:].find('">')
 	name = link[link.find('show/') + 5:]
-	print(name)
 	try:
 	    h = httplib2.Http('.cache')
 	    response, content = h.request(page[l + 9 :l + r])
@@ -49,4 +52,14 @@ def find(request):
 	except:
 		print('error')
 
-	return redirect('listt')#, 'data/' + name + '.jpg')
+	image = cv2.imread('data/'+name+'.jpg')
+	gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+	gray = cv2.medianBlur(gray, 5)
+	 
+	filename = "{}.png".format(os.getpid())
+	cv2.imwrite(filename, gray)
+
+	text = pytesseract.image_to_string(Image.open(filename), config='--psm 7')
+	os.remove(filename)
+
+	return redirect('listt')
